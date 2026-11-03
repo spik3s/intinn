@@ -1,12 +1,13 @@
+# Jobs run in list order. Lint before format: eslint --fix can leave code Prettier would reformat.
 pre-commit:
-  commands:
-    format:
-      glob: "*.{ts,js,cjs,json,md,yml,yaml}"
-      run: pnpm exec prettier --write --ignore-unknown {staged_files}
-      stage_fixed: true
-    lint:
+  jobs:
+    - name: lint
       glob: "*.{ts,js,cjs}"
       run: pnpm exec eslint --fix {staged_files}
       stage_fixed: true
-    secrets:
+    - name: format
+      glob: "*.{ts,js,cjs,json,md,yml,yaml}"
+      run: pnpm exec prettier --write --ignore-unknown {staged_files}
+      stage_fixed: true
+    - name: secrets
       run: gitleaks git --pre-commit --staged --redact --no-banner --verbose
