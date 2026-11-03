@@ -1,6 +1,8 @@
 # Jobs run in list order. Lint before format: eslint --fix can leave code Prettier would reformat.
 pre-commit:
   jobs:
+    - name: no-claude-commits-on-main
+      run: .claude/hooks/git-guard-main.sh pre-commit
     - name: lint
       glob: "*.{ts,js,cjs}"
       run: pnpm exec eslint --fix {staged_files}
@@ -11,3 +13,9 @@ pre-commit:
       stage_fixed: true
     - name: secrets
       run: gitleaks git --pre-commit --staged --redact --no-banner --verbose
+
+pre-push:
+  jobs:
+    - name: no-claude-pushes-to-main
+      run: .claude/hooks/git-guard-main.sh pre-push
+      use_stdin: true
