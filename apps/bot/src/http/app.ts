@@ -1,14 +1,17 @@
 import { sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
+import type { PgBoss } from "pg-boss";
 import type { Db } from "../db/client.ts";
 import { logger } from "../lib/logger.ts";
+import { lineWebhookRoutes } from "../modules/line-webhook/index.ts";
 
 export interface AppDeps {
   db: Db;
+  boss: PgBoss;
 }
 
-export function createApp({ db }: AppDeps): Hono {
+export function createApp({ db, boss }: AppDeps): Hono {
   const app = new Hono();
 
   app.get("/health", async (c) => {
@@ -20,6 +23,8 @@ export function createApp({ db }: AppDeps): Hono {
       return c.json({ status: "unavailable" }, 503);
     }
   });
+
+  app.route("/webhooks/line", lineWebhookRoutes({ boss }));
 
   app.onError((err, c) => {
     if (err instanceof HTTPException) {
