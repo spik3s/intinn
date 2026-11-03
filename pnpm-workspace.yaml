@@ -1,0 +1,5 @@
+packages:
+  - apps/*
+
+# Wait 3 days (in minutes) before installing a newly published version.
+minimumReleaseAge: 4320
