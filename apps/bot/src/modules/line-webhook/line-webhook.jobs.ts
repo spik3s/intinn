@@ -2,6 +2,7 @@ import type { webhook } from "@line/bot-sdk";
 import type { PgBoss } from "pg-boss";
 import { v5 as uuidv5 } from "uuid";
 import { queues } from "../../jobs/queues.ts";
+import { logger } from "../../lib/logger.ts";
 import {
   replyToLineEvent,
   type LineReplyClient,
@@ -30,7 +31,16 @@ export async function registerLineEventWorker(
 ): Promise<string> {
   return boss.work<LineEventJob>(queues.lineEvent, async (jobs) => {
     for (const job of jobs) {
-      await replyToLineEvent(job.data.event, line);
+      try {
+        await replyToLineEvent(job.data.event, line);
+      } catch (err) {
+        // pg-boss stores the failure for its retry without logging it.
+        logger.error(
+          { err, webhookEventId: job.data.event.webhookEventId },
+          "line event failed",
+        );
+        throw err;
+      }
     }
   });
 }
