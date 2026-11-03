@@ -5,14 +5,21 @@
   "scripts": {
     "start": "node src/main.ts",
     "typecheck": "tsc",
-    "test": "vitest run"
+    "test": "vitest run",
+    "db:generate": "drizzle-kit generate"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
+    "@types/pg": "^8.23.1",
+    "drizzle-kit": "~0.31.11",
     "typescript": "6.0.3",
     "vitest": "^5.0.5"
   },
   "dependencies": {
+    "drizzle-orm": "~0.45.4",
+    "hono": "^4.13.14",
+    "pg": "^8.23.1",
+    "pino": "^10.4.0",
     "zod": "^4.6.7"
   }
 }

@@ -43,5 +43,9 @@ module.exports = {
     doNotFollow: { path: "node_modules" },
     tsConfig: { fileName: `${__dirname}/apps/bot/tsconfig.json` },
     tsPreCompilationDeps: true,
+    enhancedResolveOptions: {
+      exportsFields: ["exports"],
+      conditionNames: ["import", "require", "node", "default", "types"],
+    },
   },
 };
