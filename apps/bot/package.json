@@ -3,11 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node --watch --env-file=.env src/main.ts | pino-pretty",
     "start": "node src/main.ts",
     "typecheck": "tsc",
-    "test": "vitest run",
-    "db:generate": "drizzle-kit generate"
+    "test": "vitest run"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",

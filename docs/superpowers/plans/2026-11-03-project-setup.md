@@ -5,6 +5,7 @@
 **Goal:** Build the project foundation for Intinn: a pnpm workspace with one TypeScript app, quality gates enforced by tools, a Claude Code setup, CI with Claude review, and an echo bot that proves the LINE → queue → reply pipeline.
 
 **Architecture:** One Node 26 process runs a Hono HTTP server and a pg-boss worker.
+
 - The LINE webhook verifies the signature on the raw body, enqueues one pg-boss job per event, and returns 200 at once.
 - The worker replies to text messages with a fixed Thai echo.
 - Postgres, run through Docker Compose locally, holds the pg-boss tables. Drizzle provides the database client.
@@ -12,50 +13,54 @@
 
 **Tech Stack:**
 
-| Package | Version |
-|---|---|
-| Node | 26.13.0 |
-| pnpm | 12.16.1 |
-| TypeScript | 6.0.3 |
-| Hono | 4.13 + `@hono/node-server` 2.1 |
-| Zod | 4.6 |
-| Drizzle ORM | 0.45 + drizzle-kit 0.31 + `pg` 8.23 |
-| pg-boss | 12.38 |
-| `@line/bot-sdk` | 11.4 |
-| uuid | 14 |
-| pino | 10 + pino-pretty 13 |
-| Vitest | 5.1 |
-| ESLint | 10.14 + typescript-eslint 8.72 + eslint-config-prettier 10 |
-| Prettier | 3.9 |
-| knip | 6.44 |
-| dependency-cruiser | 18.7 |
-| jscpd | 5.4 |
-| lefthook | 2.2 |
-| gitleaks | latest via brew |
+| Package            | Version                                                    |
+| ------------------ | ---------------------------------------------------------- |
+| Node               | 26.13.0                                                    |
+| pnpm               | 12.16.1                                                    |
+| TypeScript         | 6.0.3                                                      |
+| Hono               | 4.13 + `@hono/node-server` 2.1                             |
+| Zod                | 4.6                                                        |
+| Drizzle ORM        | 0.45 + drizzle-kit 0.31 + `pg` 8.23                        |
+| pg-boss            | 12.38                                                      |
+| `@line/bot-sdk`    | 11.4                                                       |
+| uuid               | 14                                                         |
+| pino               | 10 + pino-pretty 13                                        |
+| Vitest             | 5.1                                                        |
+| ESLint             | 10.14 + typescript-eslint 8.72 + eslint-config-prettier 10 |
+| Prettier           | 3.9                                                        |
+| knip               | 6.44                                                       |
+| dependency-cruiser | 18.7                                                       |
+| jscpd              | 5.4                                                        |
+| lefthook           | 2.2                                                        |
+| gitleaks           | latest via brew                                            |
 
 **Spec:** `docs/superpowers/specs/2026-11-03-project-setup-design.md` (read §6, §7 and §12 before starting). Background research: `docs/research/2026-11-03-platform-research.md`.
 
 ## Global Constraints
 
 **Toolchain**
+
 - Node `26.13.0`, pinned in `.tool-versions` (asdf). pnpm `12.16.1`, pinned in root `package.json` `packageManager`.
 - TypeScript `6.0.3`, not 7. typescript-eslint 8.72 requires `typescript <6.1`.
 - ESM only (`"type": "module"`).
 - Relative imports use `.ts` extensions. No enums, namespaces or parameter properties (`erasableSyntaxOnly`).
 
 **Code**
+
 - Only `apps/bot/src/env.ts` reads `process.env`. No `console`; use `logger` from `lib/logger.ts`.
 - Plain functions. No classes of our own. No DI container: pass dependencies as arguments.
 - Errors are thrown. Routes throw Hono's `HTTPException`. No Result types.
 - Files are kebab-case. A module's files are named `<feature>.<role>.ts`, and a module exposes only `index.ts` to other modules.
 - Fixed user-facing text lives in `lib/copy/th.ts`. Thai is the default.
-- Comments explain *why*, never *what*.
+- Comments explain _why_, never _what_.
 
 **Tests**
+
 - Tests live next to the code (`*.test.ts`). Integration tests use the real Postgres database `intinn_test`.
 - Fake external clients through `Pick<>` types. Never `vi.mock` our own modules.
 
 **Workflow**
+
 - All work after Task 0 happens on branch `chore/project-setup`. Commit at the end of each task.
 - Re-check each package version with `npm view <pkg> version` before adding it. If a major version moved since 2026-11-03, stop and ask.
 - Never read or print `.env`.
@@ -75,6 +80,7 @@ These are conditions the spec implies that its listed tests don't cover. Each on
 ### Task 0: Bootstrap git and publish the docs
 
 **Files:**
+
 - Create: `.gitignore`
 - Existing: `docs/superpowers/specs/2026-11-03-project-setup-design.md`, `docs/research/2026-11-03-platform-research.md`, this plan
 
@@ -101,12 +107,14 @@ git remote add origin https://github.com/spik3s/intinn.git
 ### Task 1: Workspace, TypeScript, Vitest and validated env
 
 **Files:**
+
 - Create: `.tool-versions`, `package.json`, `pnpm-workspace.yaml`, `tsconfig.base.json`
 - Create: `apps/bot/package.json`, `apps/bot/tsconfig.json`, `apps/bot/vitest.config.ts`, `apps/bot/.env.example`
 - Create: `apps/bot/src/env.ts`
 - Test: `apps/bot/src/env.test.ts`
 
 **Interfaces:**
+
 - Produces: `parseEnv(source: Record<string, string | undefined>): Env`, `env: Env`, `type Env`.
 - `Env` fields:
   - `NODE_ENV`: `'development' | 'test' | 'production'`. Default `development`.
@@ -161,21 +169,27 @@ Expected: `node -v` prints `v26.13.0` and `pnpm -v` prints `12.16.1` inside the 
 
 ```ts
 const valid = {
-  DATABASE_URL: 'postgres://u:p@localhost:5432/db',
-  LINE_CHANNEL_SECRET: 's',
-  LINE_CHANNEL_ACCESS_TOKEN: 't',
+  DATABASE_URL: "postgres://u:p@localhost:5432/db",
+  LINE_CHANNEL_SECRET: "s",
+  LINE_CHANNEL_ACCESS_TOKEN: "t",
 };
 
-test('applies defaults for optional settings', () => {
-  expect(parseEnv(valid)).toMatchObject({ NODE_ENV: 'development', PORT: 3000, LOG_LEVEL: 'info' });
+test("applies defaults for optional settings", () => {
+  expect(parseEnv(valid)).toMatchObject({
+    NODE_ENV: "development",
+    PORT: 3000,
+    LOG_LEVEL: "info",
+  });
 });
 
-test('reads PORT as a number', () => {
-  expect(parseEnv({ ...valid, PORT: '8080' }).PORT).toBe(8080);
+test("reads PORT as a number", () => {
+  expect(parseEnv({ ...valid, PORT: "8080" }).PORT).toBe(8080);
 });
 
-test('names every missing required setting', () => {
-  expect(() => parseEnv({})).toThrow(/DATABASE_URL[\s\S]*LINE_CHANNEL_SECRET[\s\S]*LINE_CHANNEL_ACCESS_TOKEN/);
+test("names every missing required setting", () => {
+  expect(() => parseEnv({})).toThrow(
+    /DATABASE_URL[\s\S]*LINE_CHANNEL_SECRET[\s\S]*LINE_CHANNEL_ACCESS_TOKEN/,
+  );
 });
 ```
 
@@ -202,10 +216,12 @@ git commit -m "chore: add pnpm workspace, strict TypeScript and validated env"
 ### Task 2: Lint, format and structure gates (`pnpm check`)
 
 **Files:**
+
 - Create: `eslint.config.js`, `.prettierignore`, `knip.json`, `.dependency-cruiser.cjs`, `.jscpd.json`
 - Modify: root `package.json` (scripts and root dev dependencies)
 
 **Interfaces:**
+
 - Produces root scripts:
   - `lint: "eslint ."`
   - `format: "prettier --write ."`, `format:check: "prettier --check ."`
@@ -269,11 +285,13 @@ git commit -m "chore: add pnpm workspace, strict TypeScript and validated env"
 ### Task 3: Postgres, logger and HTTP app with `/health`
 
 **Files:**
+
 - Create: `docker-compose.yml`, `docker/postgres/init/01-create-test-db.sql`
 - Create: `apps/bot/drizzle.config.ts`, `apps/bot/src/db/client.ts`, `apps/bot/src/lib/logger.ts`, `apps/bot/src/http/app.ts`
 - Test: `apps/bot/src/http/app.test.ts`
 
 **Interfaces:**
+
 - Consumes: `env` (Task 1).
 - Produces:
   - `type Db = NodePgDatabase` and `createDb(connectionString: string): Db` in `db/client.ts`. Close with `db.$client.end()`.
@@ -296,19 +314,19 @@ git commit -m "chore: add pnpm workspace, strict TypeScript and validated env"
 - [ ] **Step 4: Write the failing tests in `apps/bot/src/http/app.test.ts`**
 
 ```ts
-test('GET /health reports ok when the database answers', async () => {
+test("GET /health reports ok when the database answers", async () => {
   const db = createDb(env.DATABASE_URL);
-  const res = await createApp({ db }).request('/health');
+  const res = await createApp({ db }).request("/health");
   expect(res.status).toBe(200);
-  expect(await res.json()).toEqual({ status: 'ok' });
+  expect(await res.json()).toEqual({ status: "ok" });
   await db.$client.end();
 });
 
-test('GET /health reports unavailable when the database is down', async () => {
-  const db = createDb('postgres://intinn:intinn@localhost:1/intinn');
-  const res = await createApp({ db }).request('/health');
+test("GET /health reports unavailable when the database is down", async () => {
+  const db = createDb("postgres://intinn:intinn@localhost:1/intinn");
+  const res = await createApp({ db }).request("/health");
   expect(res.status).toBe(503);
-  expect(await res.json()).toEqual({ status: 'unavailable' });
+  expect(await res.json()).toEqual({ status: "unavailable" });
   await db.$client.end();
 });
 ```
@@ -322,7 +340,7 @@ test('GET /health reports unavailable when the database is down', async () => {
     - `pino({ level: env.LOG_LEVEL })`
     - `redact: ['headers.authorization', 'headers["x-line-signature"]', '*.channelAccessToken', '*.replyToken']`
   - `createApp`:
-    - `GET /health` runs `db.execute(sql\`select 1\`)`. On success it returns `{ status: 'ok' }`. On error it logs at `warn` and returns 503 `{ status: 'unavailable' }`.
+    - `GET /health` runs `db.execute(sql\`select 1\`)`. On success it returns `{ status: 'ok' }`. On error it logs at `warn`and returns 503`{ status: 'unavailable' }`.
     - `app.onError`: return `err.getResponse()` for an `HTTPException`. Otherwise log at `error` and return 500 `{ status: 'error' }`.
 - [ ] **Step 7: Run the tests and `pnpm check`**
   - Run: `pnpm check`
@@ -333,6 +351,7 @@ test('GET /health reports unavailable when the database is down', async () => {
 ### Task 4: LINE webhook intake (signature check, enqueue, dedupe)
 
 **Files:**
+
 - Create: `apps/bot/src/jobs/boss.ts`, `apps/bot/src/jobs/queues.ts`
 - Create: `apps/bot/src/modules/line-webhook/line-webhook.routes.ts`, `apps/bot/src/modules/line-webhook/line-webhook.jobs.ts`, `apps/bot/src/modules/line-webhook/index.ts`
 - Create: `apps/bot/src/modules/line-webhook/line-webhook.fixtures.ts` (test events, imported only by tests)
@@ -341,6 +360,7 @@ test('GET /health reports unavailable when the database is down', async () => {
 - Test: `apps/bot/src/modules/line-webhook/line-webhook.routes.test.ts`
 
 **Interfaces:**
+
 - Consumes: `createApp`, `AppDeps` (Task 3), `env.LINE_CHANNEL_SECRET`.
 - Produces:
   - `queues = { lineEvent: 'line.event' } as const` in `jobs/queues.ts`.
@@ -368,35 +388,43 @@ test('GET /health reports unavailable when the database is down', async () => {
     - the rest of the required fields as in LINE's sample payload
 
 ```ts
-test('rejects a request without a signature header', async () => {
-  const res = await post(JSON.stringify({ destination: 'U', events: [textEvent('E1')] }), {});
+test("rejects a request without a signature header", async () => {
+  const res = await post(
+    JSON.stringify({ destination: "U", events: [textEvent("E1")] }),
+    {},
+  );
   expect(res.status).toBe(401);
   expect(await queued()).toHaveLength(0);
 });
 
-test('rejects a bad signature before parsing the body', async () => {
-  const res = await post('not json', { 'x-line-signature': 'bad' });
+test("rejects a bad signature before parsing the body", async () => {
+  const res = await post("not json", { "x-line-signature": "bad" });
   expect(res.status).toBe(401);
 });
 
-test('accepts the LINE console verify request without enqueuing', async () => {
-  const body = JSON.stringify({ destination: 'U', events: [] });
-  const res = await post(body, { 'x-line-signature': sign(body) });
+test("accepts the LINE console verify request without enqueuing", async () => {
+  const body = JSON.stringify({ destination: "U", events: [] });
+  const res = await post(body, { "x-line-signature": sign(body) });
   expect(res.status).toBe(200);
   expect(await queued()).toHaveLength(0);
 });
 
-test('enqueues one job per event', async () => {
-  const body = JSON.stringify({ destination: 'U', events: [textEvent('E1'), textEvent('E2')] });
-  const res = await post(body, { 'x-line-signature': sign(body) });
+test("enqueues one job per event", async () => {
+  const body = JSON.stringify({
+    destination: "U",
+    events: [textEvent("E1"), textEvent("E2")],
+  });
+  const res = await post(body, { "x-line-signature": sign(body) });
   expect(res.status).toBe(200);
-  expect((await queued()).map((job) => job.data.event.webhookEventId).sort()).toEqual(['E1', 'E2']);
+  expect(
+    (await queued()).map((job) => job.data.event.webhookEventId).sort(),
+  ).toEqual(["E1", "E2"]);
 });
 
-test('enqueues a redelivered event only once', async () => {
-  const body = JSON.stringify({ destination: 'U', events: [textEvent('E1')] });
-  await post(body, { 'x-line-signature': sign(body) });
-  await post(body, { 'x-line-signature': sign(body) });
+test("enqueues a redelivered event only once", async () => {
+  const body = JSON.stringify({ destination: "U", events: [textEvent("E1")] });
+  await post(body, { "x-line-signature": sign(body) });
+  await post(body, { "x-line-signature": sign(body) });
   expect(await queued()).toHaveLength(1);
 });
 ```
@@ -418,11 +446,13 @@ test('enqueues a redelivered event only once', async () => {
 ### Task 5: Echo worker, process entrypoint and local-dev README
 
 **Files:**
+
 - Create: `apps/bot/src/lib/copy/th.ts`, `apps/bot/src/modules/line-webhook/line-webhook.service.ts`, `apps/bot/src/main.ts`, `README.md`
 - Modify: `apps/bot/src/modules/line-webhook/line-webhook.jobs.ts` (worker registration), `apps/bot/src/modules/line-webhook/index.ts`
 - Test: `apps/bot/src/modules/line-webhook/line-webhook.service.test.ts`
 
 **Interfaces:**
+
 - Consumes: `LineEventJob`, `queues`, `startBoss`, `createDb`, `createApp`, `logger`, `env`.
 - Produces:
   - `th = { echo: (text: string) => string }` in `lib/copy/th.ts`. `th.echo(text)` returns exactly `` `Intinn ได้ยินว่า: ${text}` ``.
@@ -436,23 +466,26 @@ test('enqueues a redelivered event only once', async () => {
   - Add `stickerEvent(id)` and `followEvent(id)` to `line-webhook.fixtures.ts`, next to `textEvent`.
 
 ```ts
-test('echoes a text message through the reply token', async () => {
+test("echoes a text message through the reply token", async () => {
   const { client, requests } = fakeLine();
-  await replyToLineEvent(textEvent('E1', 'สวัสดี 🌞'), client);
+  await replyToLineEvent(textEvent("E1", "สวัสดี 🌞"), client);
   expect(requests).toEqual([
-    { replyToken: 'reply-token', messages: [{ type: 'text', text: 'Intinn ได้ยินว่า: สวัสดี 🌞' }] },
+    {
+      replyToken: "reply-token",
+      messages: [{ type: "text", text: "Intinn ได้ยินว่า: สวัสดี 🌞" }],
+    },
   ]);
 });
 
-test('does not reply to a sticker message', async () => {
+test("does not reply to a sticker message", async () => {
   const { client, requests } = fakeLine();
-  await replyToLineEvent(stickerEvent('E2'), client);
+  await replyToLineEvent(stickerEvent("E2"), client);
   expect(requests).toEqual([]);
 });
 
-test('does not reply to a follow event', async () => {
+test("does not reply to a follow event", async () => {
   const { client, requests } = fakeLine();
-  await replyToLineEvent(followEvent('E3'), client);
+  await replyToLineEvent(followEvent("E3"), client);
   expect(requests).toEqual([]);
 });
 ```
@@ -502,12 +535,14 @@ test('does not reply to a follow event', async () => {
 ### Task 6: Claude Code setup
 
 **Files:**
+
 - Create: `CLAUDE.md`
 - Create: `.claude/settings.json`, `.claude/hooks/format-file.sh`, `.claude/hooks/typecheck-on-stop.sh`, `.claude/hooks/protect-files.sh`, `.claude/hooks/guard-main.sh`
 - Create: `.claude/rules/line.md`, `.claude/rules/db.md`, `.claude/rules/testing.md`, `.claude/rules/prompts.md`
 - Create: `.claude/agents/reviewer.md`, `.mcp.json`
 
 **Interfaces:**
+
 - Hook scripts read the hook JSON from stdin with `jq`.
 - Exit 2 with a one-line reason on stderr blocks the action. Exit 0 allows it.
 
@@ -602,6 +637,7 @@ test('does not reply to a follow event', async () => {
 ### Task 7: Git hooks, CI, Claude PR review and Dependabot
 
 **Files:**
+
 - Create: `lefthook.yml`, `.github/workflows/ci.yml`, `.github/workflows/claude-review.yml`, `.github/dependabot.yml`, `.github/pull_request_template.md`
 - Modify: root `package.json`: add `lefthook@2` as a dev dependency, a `prepare: "lefthook install"` script, and `lefthook` in `onlyBuiltDependencies` if pnpm asks
 

@@ -9,6 +9,23 @@
   "scripts": {
     "dev": "pnpm --filter @intinn/bot dev",
     "typecheck": "pnpm -r typecheck",
-    "test": "pnpm -r test"
+    "test": "pnpm -r test",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "knip": "knip",
+    "depcruise": "depcruise apps/bot/src",
+    "jscpd": "jscpd",
+    "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm knip && pnpm depcruise && pnpm jscpd"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "dependency-cruiser": "^18.7.0",
+    "eslint": "^10.14.0",
+    "eslint-config-prettier": "^10.1.8",
+    "jscpd": "^5.4.2",
+    "knip": "^6.44.1",
+    "prettier": "^3.9.10",
+    "typescript-eslint": "^8.72.1"
   }
 }
