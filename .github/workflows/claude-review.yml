@@ -1,0 +1,59 @@
+name: Claude review
+
+# Advisory only: no other job depends on this, so a failed or rate-limited run never blocks a merge.
+# Never switch to pull_request_target: on a public repo that would hand secrets to fork PRs.
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review]
+  issue_comment:
+    types: [created]
+
+jobs:
+  review:
+    if: >-
+      (github.event_name == 'pull_request' &&
+        !github.event.pull_request.draft &&
+        github.event.pull_request.head.repo.full_name == github.repository) ||
+      (github.event_name == 'issue_comment' &&
+        github.event.issue.pull_request &&
+        contains(github.event.comment.body, '@claude review') &&
+        github.event.comment.author_association == 'OWNER')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write
+    env:
+      PR_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+
+      - name: Code review
+        uses: anthropics/claude-code-action@4845bacbb38b3c4b15d948f035349786f678e068 # v1.0.267
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          plugin_marketplaces: https://github.com/anthropics/claude-plugins-official.git
+          plugins: code-review@claude-plugins-official
+          prompt: /code-review:code-review --comment ${{ github.repository }}/pull/${{ env.PR_NUMBER }}
+          claude_args: --allowedTools "mcp__github_inline_comment__create_inline_comment"
+
+      - name: Security review
+        uses: anthropics/claude-code-action@4845bacbb38b3c4b15d948f035349786f678e068 # v1.0.267
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            Review pull request ${{ github.repository }}#${{ env.PR_NUMBER }} for security problems only.
+            Read the diff with `gh pr diff ${{ env.PR_NUMBER }}`, and the project rules in CLAUDE.md and .claude/rules/.
+            Look for:
+            - secrets, tokens or personal data in code, logs, prompts or error messages
+            - a LINE webhook that skips the signature check or checks it after parsing the body
+            - SQL built from strings
+            - input crossing a trust boundary without validation
+            - data from a LINE client (LIFF/MINI App) trusted without server-side verification
+            - new dependencies, especially ones that need install scripts
+            Post exactly one comment with `gh pr comment ${{ env.PR_NUMBER }} --body-file <file>`.
+            List findings as `file:line — problem — why it matters`, most severe first, or write "Security review: no findings."
+          claude_args: --allowedTools "Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr comment:*),Read,Grep,Glob,Write"

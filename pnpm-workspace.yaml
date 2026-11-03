@@ -4,6 +4,8 @@ packages:
 # Wait 3 days (in minutes) before installing a newly published version.
 minimumReleaseAge: 4320
 
-# esbuild ships its binary as an optional dependency; its install script is not needed.
+# Install scripts we don't need: esbuild ships its binary as an optional dependency,
+# and the root `prepare` script installs the lefthook git hooks.
 allowBuilds:
   esbuild: false
+  lefthook: false
