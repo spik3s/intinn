@@ -22,6 +22,12 @@ cp apps/bot/.env.example apps/bot/.env
 
 Fill in the two LINE values in `apps/bot/.env` (see below). Never commit this file.
 
+In Claude Code, install the security plugin the project settings enable (once per machine; needs Python 3):
+
+```bash
+claude plugin install security-guidance@claude-plugins-official --scope project
+```
+
 ## Run and check
 
 ```bash
