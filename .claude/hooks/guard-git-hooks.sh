@@ -10,7 +10,7 @@ block() {
 [[ "$cmd" =~ --no-verify ]] && block "--no-verify skips git hooks"
 [[ "$cmd" =~ LEFTHOOK(_EXCLUDE)?= ]] && block "LEFTHOOK variables turn git hooks off"
 [[ "$cmd" =~ core\.hooks[Pp]ath ]] && block "core.hooksPath replaces the git hooks"
-if [[ "$cmd" =~ git[[:space:]].*commit ]] && [[ "$cmd" =~ (^|[[:space:]])-[a-zA-Z]*n[a-zA-Z]*([[:space:]]|$) ]]; then
-  block "git commit -n skips git hooks"
-fi
+# -n (alone or in a cluster like -nm) after `git ... commit`, within one shell segment.
+commit_no_verify='git[[:space:]]+([^;&|]*[[:space:]])?commit[[:space:]]([^;&|]*[[:space:]])?-[a-zA-Z]*n[a-zA-Z]*([[:space:]]|$)'
+[[ "$cmd" =~ $commit_no_verify ]] && block "git commit -n skips git hooks"
 exit 0

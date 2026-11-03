@@ -1,8 +1,10 @@
 # Jobs run in list order. Lint before format: eslint --fix can leave code Prettier would reformat.
+# The main guards are scripts in .lefthook/<hook>/, because lefthook skips `run` jobs when no
+# files are staged or pushed, and the guards must run every time.
 pre-commit:
   jobs:
-    - name: no-claude-commits-on-main
-      run: .claude/hooks/git-guard-main.sh pre-commit
+    - script: no-claude-commits-on-main.sh
+      runner: bash
     - name: lint
       glob: "*.{ts,js,cjs}"
       run: pnpm exec eslint --fix {staged_files}
@@ -16,6 +18,6 @@ pre-commit:
 
 pre-push:
   jobs:
-    - name: no-claude-pushes-to-main
-      run: .claude/hooks/git-guard-main.sh pre-push
+    - script: no-claude-pushes-to-main.sh
+      runner: bash
       use_stdin: true
