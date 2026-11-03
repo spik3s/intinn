@@ -31,6 +31,7 @@ apps/bot/src/
   modules/<feature>/   one folder per feature; line-webhook is the reference
 docs/            specs, plans, research, decisions
 .claude/         settings, hooks, rules per area, reviewer agent
+.lefthook/       git hook scripts that keep Claude off main
 ```
 
 ## Rules
@@ -60,6 +61,7 @@ docs/            specs, plans, research, decisions
 
 - Write the failing test first. Tests sit next to the code as `*.test.ts`.
 - Use the real `intinn_test` database. Fake LINE/Anthropic with `Pick<>` clients. Never `vi.mock` our own modules.
+- Test files run one at a time (`fileParallelism: false`): they share the database and its pg-boss queues.
 
 **Dependencies**
 
@@ -68,10 +70,10 @@ docs/            specs, plans, research, decisions
 
 ## Workflow
 
-- Work on a branch named `<type>/<topic>` (`feat/`, `fix/`, `chore/`, `docs/`, `ci/`). Never commit to or push `main`; a hook blocks it.
+- Work on a branch named `<type>/<topic>` (`feat/`, `fix/`, `chore/`, `docs/`, `ci/`). Never commit to or push `main`; git hooks refuse it (see Known surprises).
 - Commit messages follow the same types: `feat: …`, `fix: …`, `chore: …`.
 - Run `pnpm check` before opening a PR, and fill in the PR template.
-- Claude reviews each PR when it opens or is marked ready; comment `@claude review` to run it again. Use the `reviewer` agent locally before pushing.
+- Claude reviews each of the owner's PRs when it opens or is marked ready (code review, then security review). The owner can comment `@claude review` to run it again; the code-review plugin may skip a PR it has already commented on, while the security review always runs. Use the `reviewer` agent locally before pushing.
 - Record a non-obvious decision as `docs/decisions/NNNN-short-title.md` (context, decision, consequences).
 
 ## Known surprises
@@ -80,4 +82,5 @@ docs/            specs, plans, research, decisions
 - Every pg-boss queue must be listed in `jobs/queues.ts`; `startBoss` creates them, and `send`/`work` fail on a queue that was never created.
 - LINE gives the webhook 2 seconds. Never do slow work in a route; enqueue it.
 - Prettier runs with its defaults (double quotes). Don't add a Prettier config to change style.
-- The format hook and the Stop type check only load when a Claude Code session starts.
+- The `main` guard: when Claude Code runs git (`CLAUDECODE=1`), the lefthook scripts in `.lefthook/` refuse a commit on `main` and any push to `main`. The owner is not affected. A PreToolUse hook blocks the ways around them (`--no-verify`, `commit -n`, `LEFTHOOK=`, `core.hooksPath`), and it also blocks a command that merely quotes those words, so write such text with the file tools instead of the shell.
+- The guard needs installed git hooks: `pnpm install` runs `lefthook install` through the root `prepare` script.

@@ -238,7 +238,7 @@ Rules enforced by dependency-cruiser and ESLint:
   - It runs `pnpm check` against a Postgres service container.
   - Claude code review and security review run on PRs (§7.6).
 - **`main` protection — Owner decision: enforced locally, free.**
-  - A Claude Code `PreToolUse` hook on Bash blocks `git commit` while on `main`, and any `git push` to `main`.
+  - Git hooks (lefthook scripts in `.lefthook/`) refuse a commit on `main` and any push to `main` when Claude Code runs git (`CLAUDECODE=1`). A Claude Code `PreToolUse` hook blocks the ways to skip git hooks. (Changed after the final review; a command-text match in a `PreToolUse` hook was easy to bypass.)
   - So every change Claude makes goes through a branch and a PR, where CI and the Claude review run.
   - The owner is not blocked.
   - There is no GitHub ruleset (see §11).
@@ -276,7 +276,7 @@ Hooks:
 - `Stop`: run `pnpm typecheck`, and exit 2 on failure so Claude fixes it before finishing.
 - `PreToolUse`:
   - block edits to `.env*` and to applied migrations
-  - block commits on `main` and pushes to `main` (§7.5)
+  - block skipping the git hooks that keep Claude off `main` (§7.5)
 
 Enable the official `security-guidance` plugin.
 
