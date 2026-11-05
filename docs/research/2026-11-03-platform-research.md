@@ -1,6 +1,7 @@
 # Intinn research notes (2026-11-03)
 
 ## LINE (Thailand)
+
 - Plans (THB/month excl. VAT): Free 0 / 300 msgs / no overage; Basic 1,280 / 15,000 / 0.10 per extra; Pro 1,780 / 35,000 / 0.06 per extra. Pro cheaper than Basic above ~20k msgs (~210 users).
 - Push/multicast/narrowcast/broadcast count (requests x recipients; up to 5 message objects per request count once). Reply is free.
 - Reply token: single use, ~1 min (20 min for redelivered webhook); "subject to change".
@@ -12,6 +13,7 @@
 - LIFF v2.31.2; LINE recommends new LIFF apps be built as LINE MINI Apps (available in TH). userId stable per provider: keep all channels under one provider; verify liff.getIDToken() server-side via /oauth2/v2.1/verify, use `sub`.
 
 ## Human Design chart computation
+
 - OSS libs are single-maintainer: natalengine 1.6.1 (MIT, JS, astronomy-engine, full chart, accuracy log vs Jovian PDFs), hd-chart-engine 0.1.1 (MIT, TS, activations only), free-human-design (MIT, lower accuracy), openhumandesign-library (AGPL). Python options AGPL/GPL/unmaintained.
 - Swiss Ephemeris: AGPL or Professional License CHF 700 one-time, unlimited projects. `sweph` 2.10.3-8 binding: TS types, prebuilt binaries, no data files, true + mean node.
 - Astronomy Engine (MIT, last release 2.1.19 Dec 2023): Moon ~2" median / 27" worst vs Swiss; line = 3,375" so sufficient. No node function; true node must be derived.
@@ -21,6 +23,7 @@
 - Agent recommendation: own TS engine on sweph + CHF 700 licence; fallback astronomy-engine. Verify with ~100 fixture charts + 1,000 seeded births vs pyswisseph; assert 88 deg design arc.
 
 ## Tooling (versions per npm registry, to re-verify at scaffold time)
+
 - Node 26 LTS; pnpm 12 (minimumReleaseAge); TS 7.0.2 latest but typescript-eslint 8.72 needs TS < 6.1 -> use TS 6.0.x for now.
 - ESLint 10 + typescript-eslint strictTypeChecked + Prettier (alt: TS7 + Oxlint/tsgolint). Vitest 5.1. Hono 4.13 (v5 RC). Drizzle 0.45 (1.0 RC). pg-boss 12 (cron w/ tz, delayed jobs, retries, DLQ). Zod 4. @anthropic-ai/sdk 1.3 (messages.parse + zodOutputFormat; Batch API -50%).
 - knip, dependency-cruiser, gitleaks, jscpd (CI threshold).

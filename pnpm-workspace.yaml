@@ -1,0 +1,11 @@
+packages:
+  - apps/*
+
+# Wait 3 days (in minutes) before installing a newly published version.
+minimumReleaseAge: 4320
+
+# Install scripts we don't need: esbuild ships its binary as an optional dependency,
+# and the root `prepare` script installs the lefthook git hooks.
+allowBuilds:
+  esbuild: false
+  lefthook: false

@@ -1,0 +1,9 @@
+{
+  "path": ["apps"],
+  "pattern": "**/src/**/*.ts",
+  "ignore": ["**/*.test.ts", "**/migrations/**", "**/node_modules/**"],
+  "minTokens": 50,
+  "threshold": 1,
+  "reporters": ["console"],
+  "gitignore": true
+}

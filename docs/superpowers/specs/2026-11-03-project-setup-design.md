@@ -114,29 +114,29 @@ Every decision in this section is **Claude's call** unless marked **Owner**. Cla
 
 ### 7.1 Stack
 
-| Slot | Choice | Reason |
-|---|---|---|
-| Language | TypeScript, strict (**Owner**: typed) | Compiler catches a class of bugs before review |
-| Runtime | Node 26 LTS, ESM only | Current LTS; LINE SDK needs ≥ 22 |
-| Package manager | pnpm, pinned via `packageManager`, `minimumReleaseAge` set | Strict resolution; delays brand-new releases (supply chain) |
-| TypeScript version | 6.0.x | typescript-eslint does not support TS 7 yet; revisit when it does |
-| HTTP | Hono 4 + `@hono/node-server` | Small; typed; typed RPC client for the future MINI App |
-| Validation | Zod 4 | One schema library for env, HTTP, job payloads, LLM output |
-| Database | Postgres + Drizzle ORM + drizzle-kit (generated SQL migrations committed) | Schema in TS, SQL-like queries, no codegen step |
-| Jobs and schedules | pg-boss | Queues, delayed jobs, cron with time zones, retries, dead-letter queue; runs in Postgres, so no extra service |
-| LINE | `@line/bot-sdk` 11 | Official SDK; signature middleware |
-| AI | `@anthropic-ai/sdk` | Added with the first AI feature, not in the skeleton |
-| Logging | pino, with redaction of secrets and tokens | Standard structured logs |
-| Tests | Vitest | Standard |
-| Lint and format | ESLint (flat config) + typescript-eslint `strictTypeChecked` + Prettier | Strongest type-aware rules against slop; best known to Claude |
-| Structure | dependency-cruiser | Layer rules, no cycles |
-| Dead code | knip | Unused files, exports, dependencies |
-| Duplication | jscpd (CI threshold only) | Catches copy-paste |
-| Secrets | gitleaks (pre-commit and CI) | Catches committed secrets |
-| Git hooks | lefthook | One binary; fast |
-| Dependency updates | Dependabot, weekly, grouped | Native to GitHub |
-| Local services | Docker Compose (Postgres) | Owner has Docker |
-| Local tunnel | cloudflared quick tunnel | Free, no account, for the LINE webhook |
+| Slot               | Choice                                                                    | Reason                                                                                                        |
+| ------------------ | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Language           | TypeScript, strict (**Owner**: typed)                                     | Compiler catches a class of bugs before review                                                                |
+| Runtime            | Node 26 LTS, ESM only                                                     | Current LTS; LINE SDK needs ≥ 22                                                                              |
+| Package manager    | pnpm, pinned via `packageManager`, `minimumReleaseAge` set                | Strict resolution; delays brand-new releases (supply chain)                                                   |
+| TypeScript version | 6.0.x                                                                     | typescript-eslint does not support TS 7 yet; revisit when it does                                             |
+| HTTP               | Hono 4 + `@hono/node-server`                                              | Small; typed; typed RPC client for the future MINI App                                                        |
+| Validation         | Zod 4                                                                     | One schema library for env, HTTP, job payloads, LLM output                                                    |
+| Database           | Postgres + Drizzle ORM + drizzle-kit (generated SQL migrations committed) | Schema in TS, SQL-like queries, no codegen step                                                               |
+| Jobs and schedules | pg-boss                                                                   | Queues, delayed jobs, cron with time zones, retries, dead-letter queue; runs in Postgres, so no extra service |
+| LINE               | `@line/bot-sdk` 11                                                        | Official SDK; signature middleware                                                                            |
+| AI                 | `@anthropic-ai/sdk`                                                       | Added with the first AI feature, not in the skeleton                                                          |
+| Logging            | pino, with redaction of secrets and tokens                                | Standard structured logs                                                                                      |
+| Tests              | Vitest                                                                    | Standard                                                                                                      |
+| Lint and format    | ESLint (flat config) + typescript-eslint `strictTypeChecked` + Prettier   | Strongest type-aware rules against slop; best known to Claude                                                 |
+| Structure          | dependency-cruiser                                                        | Layer rules, no cycles                                                                                        |
+| Dead code          | knip                                                                      | Unused files, exports, dependencies                                                                           |
+| Duplication        | jscpd (CI threshold only)                                                 | Catches copy-paste                                                                                            |
+| Secrets            | gitleaks (pre-commit and CI)                                              | Catches committed secrets                                                                                     |
+| Git hooks          | lefthook                                                                  | One binary; fast                                                                                              |
+| Dependency updates | Dependabot, weekly, grouped                                               | Native to GitHub                                                                                              |
+| Local services     | Docker Compose (Postgres)                                                 | Owner has Docker                                                                                              |
+| Local tunnel       | cloudflared quick tunnel                                                  | Free, no account, for the LINE webhook                                                                        |
 
 Re-check versions against the npm registry at scaffold time. The research notes list what was current on 2026-11-03.
 
@@ -205,7 +205,7 @@ Rules enforced by dependency-cruiser and ESLint:
 - Validate at the boundaries only: HTTP input, job payloads from outside the process, env, LLM output. Inside a boundary, trust the types.
   - LINE webhook bodies are authenticated by the signature check, then typed with the SDK's own types. We don't re-declare LINE's schema in Zod.
 - Files use kebab-case. Types use PascalCase. Database columns use snake_case, through Drizzle's `casing` option.
-- Comments explain *why*, never *what*.
+- Comments explain _why_, never _what_.
 
 **Dependencies**
 
@@ -238,7 +238,7 @@ Rules enforced by dependency-cruiser and ESLint:
   - It runs `pnpm check` against a Postgres service container.
   - Claude code review and security review run on PRs (§7.6).
 - **`main` protection — Owner decision: enforced locally, free.**
-  - A Claude Code `PreToolUse` hook on Bash blocks `git commit` while on `main`, and any `git push` to `main`.
+  - Git hooks (lefthook scripts in `.lefthook/`) refuse a commit on `main` and any push to `main` when Claude Code runs git (`CLAUDECODE=1`). A Claude Code `PreToolUse` hook blocks the ways to skip git hooks. (Changed after the final review; a command-text match in a `PreToolUse` hook was easy to bypass.)
   - So every change Claude makes goes through a branch and a PR, where CI and the Claude review run.
   - The owner is not blocked.
   - There is no GitHub ruleset (see §11).
@@ -276,7 +276,7 @@ Hooks:
 - `Stop`: run `pnpm typecheck`, and exit 2 on failure so Claude fixes it before finishing.
 - `PreToolUse`:
   - block edits to `.env*` and to applied migrations
-  - block commits on `main` and pushes to `main` (§7.5)
+  - block skipping the git hooks that keep Claude off `main` (§7.5)
 
 Enable the official `security-guidance` plugin.
 
@@ -361,13 +361,14 @@ Add project skills only when a workflow repeats. None are needed on day one.
 
 ## 10. Deferred decisions (not this work)
 
-| Decision | When | Options from research |
-|---|---|---|
-| Chart engine base | Chart feature | Swiss Ephemeris via `sweph` + CHF 700 professional licence (matches the big chart sites) vs Astronomy Engine (MIT, free, needs a derived true node). Verify against ~100 known charts either way. |
-| Hosting | First deploy | Fly.io Singapore (~$47/mo with managed Postgres) vs Railway (~$10–20/mo) |
-| LINE plan | First real users | Basic 1,280 THB/mo, or Pro 1,780 THB/mo + 0.06 THB/msg above ~210 users |
-| Claude model per feature | Each AI feature | Batch API (50% cheaper) suits pre-generated daily messages |
-| Push vs pull content design | Daily-message feature | Rich-menu "today's message" button gives free replies |
+| Decision                    | When                                | Options from research                                                                                                                                                                                                                                                                                                                             |
+| --------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Chart engine base           | Chart feature                       | Swiss Ephemeris via `sweph` + CHF 700 professional licence (matches the big chart sites) vs Astronomy Engine (MIT, free, needs a derived true node). Verify against ~100 known charts either way.                                                                                                                                                 |
+| Hosting                     | First deploy                        | Fly.io Singapore (~$47/mo with managed Postgres) vs Railway (~$10–20/mo)                                                                                                                                                                                                                                                                          |
+| LINE plan                   | First real users                    | Basic 1,280 THB/mo, or Pro 1,780 THB/mo + 0.06 THB/msg above ~210 users                                                                                                                                                                                                                                                                           |
+| Claude model per feature    | Each AI feature                     | Batch API (50% cheaper) suits pre-generated daily messages                                                                                                                                                                                                                                                                                        |
+| Push vs pull content design | Daily-message feature               | Rich-menu "today's message" button gives free replies                                                                                                                                                                                                                                                                                             |
+| LINE event data retention   | First feature that stores user data | Each `line.event` job holds the whole event (user ID, message text, reply token), and pg-boss keeps it 7 days, which is also the dedupe window. Keep 7 days, or set a shorter `deleteAfterSeconds` on the queue (narrows the dedupe window). Decide together with the PDPA review. Owner chose to defer on 2026-11-04 (security review of PR #1). |
 
 ## 11. Owner decisions and open question
 
