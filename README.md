@@ -31,7 +31,7 @@ claude plugin install security-guidance@claude-plugins-official --scope project
 ## Run and check
 
 ```bash
-pnpm dev     # bot on http://localhost:3000, restarts on change
+pnpm dev     # bot on http://localhost:3010, restarts on change
 pnpm check   # typecheck, lint, format, tests, dead code, layer rules, duplication
 ```
 
@@ -39,16 +39,21 @@ pnpm check   # typecheck, lint, format, tests, dead code, layer rules, duplicati
 
 ## Connect a LINE channel
 
-1. In the [LINE Developers Console](https://developers.line.biz/console/), create a provider named **Intinn**. Keep every future channel (LINE Login, MINI App) under this provider, so user IDs stay the same across them.
-2. Create a **Messaging API** channel. Put its channel secret and a long-lived channel access token in `apps/bot/.env`.
-3. In [LINE Official Account Manager](https://manager.line.biz/), turn off auto-reply messages and greeting messages.
-4. Start a tunnel to your local bot:
+Since September 2024, LINE creates Messaging API channels only from LINE Official Account Manager, not from the Developers Console.
+
+1. On the [LINE Official Account Manager](https://manager.line.biz/) website (the phone app has no Messaging API settings), create a LINE Official Account. Set its country or region to **Thailand**: LINE's plans and prices depend on it.
+2. Open the account and go to **Settings → Messaging API → Enable Messaging API**. Create a new provider; don't pick an existing one. You can't change the provider later.
+   - Name it after whoever runs Intinn. Users see the provider name on LINE's consent screens.
+   - Keep every future channel (LINE Login, MINI App) under this provider. LINE gives a user a different ID under each provider, and a channel can't move to another provider.
+3. In **Settings → Response settings**, turn off the greeting message and auto-response messages, and turn on webhooks.
+4. In the [LINE Developers Console](https://developers.line.biz/console/), open the channel. Put its channel secret (**Basic settings** tab) and a long-lived channel access token (**Messaging API** tab, **Issue**) in `apps/bot/.env`.
+5. Start the bot with `pnpm dev`, and a tunnel to it:
 
    ```bash
-   cloudflared tunnel --url http://localhost:3000
+   cloudflared tunnel --url http://localhost:3010
    ```
 
-5. In the channel's Messaging API settings, set the webhook URL to `<tunnel URL>/webhooks/line`, turn on **Use webhook**, and press **Verify**.
-6. Send the bot a text message. It answers `Intinn ได้ยินว่า: <your text>`.
+6. In the channel's **Messaging API** tab, set the webhook URL to `<tunnel URL>/webhooks/line`. Turn on **Use webhook** and **Webhook redelivery**, and press **Verify**. Redelivery is safe: the bot drops an event it has already queued.
+7. Scan the QR code on the same tab to add the bot as a friend, and send it a text message. It answers `Intinn ได้ยินว่า: <your text>`.
 
 The tunnel URL changes each time `cloudflared` starts, so update the webhook URL after a restart.
