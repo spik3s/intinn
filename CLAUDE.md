@@ -78,7 +78,7 @@ docs/            specs, plans, research, decisions
 
 ## Known surprises
 
-- TypeScript is pinned to 6.0.x: typescript-eslint 8 supports only `typescript <6.1`. Upgrade both together.
+- TypeScript is pinned to 6.0.x: typescript-eslint 8 supports only `typescript <6.1`, and TypeScript 7 has no API for it. Upgrade both together, by hand: Dependabot skips TypeScript minor and major updates.
 - Every pg-boss queue must be listed in `jobs/queues.ts`; `startBoss` creates them, and `send`/`work` fail on a queue that was never created.
 - LINE gives the webhook 2 seconds. Never do slow work in a route; enqueue it.
 - Prettier runs with its defaults (double quotes). Don't add a Prettier config to change style.
