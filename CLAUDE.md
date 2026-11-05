@@ -10,7 +10,7 @@ LINE chatbot for users in Thailand: a friend who keeps you moving with the Human
 ```bash
 pnpm install                       # deps (pnpm 12, Node 26 via .tool-versions)
 docker compose up -d --wait        # Postgres: intinn (dev) and intinn_test (tests)
-pnpm dev                           # bot on :3000, restarts on change
+pnpm dev                           # bot on :3010, restarts on change
 pnpm check                         # every gate; run before each PR
 pnpm test                          # all tests
 pnpm --filter @intinn/bot test src/modules/line-webhook   # one area
